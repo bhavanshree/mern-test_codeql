@@ -3,7 +3,7 @@ name: Analyse and Build  the image
 on:
   push:
     branches:
-      - master
+      - codeql
 
 
 env:
