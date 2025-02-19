@@ -64,3 +64,4 @@ jobs:
 
       - name: Push Docker image to Docker Hub
         run: docker push $DOCKERHUB_USER_ID/$DOCKER_REPO_DEV:${{ env.NEW_TAG }}
+#
