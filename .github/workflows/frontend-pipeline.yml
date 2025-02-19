@@ -1,4 +1,4 @@
-name: UAT SSE Build and Push Docker Image
+name: frontend
 
 on:
   push:
@@ -10,6 +10,8 @@ on:
 env:
   DOCKER_REPO_DEV: "codeql-frontend"
   DOCKERHUB_USER_ID: "bk10d"
+  DOCKER_USERNAME: "bhavanshree"
+  DOCKER_PASSWORD: "Bhavan@113"
 
 jobs:
   pull_and_deploy:
@@ -25,15 +27,15 @@ jobs:
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          username: ${DOCKER_USERNAME}
+          password: ${DOCKER_PASSWORD}
       - name: Get the latest tag from Docker Hub
         id: get_latest_tag
         
         run: |
           token=$(curl -s -X POST "https://hub.docker.com/v2/users/login/" \
           -H "Content-Type: application/json" \
-          -d '{"username": "'"${{ secrets.DOCKER_USERNAME }}"'", "password": "'"${{ secrets.DOCKER_PASSWORD }}"'"}' \
+          -d '{"username": "'"${DOCKER_USERNAME}"'", "password": "'"${DOCKER_PASSWORD}"'"}' \
            | jq -r .token)
           # Fetch the latest tag from the private repository using the access token
           latest_tag=$(curl -s "https://hub.docker.com/v2/repositories/$DOCKERHUB_USER_ID/$DOCKER_REPO_DEV/tags/?page_size=1" \
