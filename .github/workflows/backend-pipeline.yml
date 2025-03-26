@@ -1,14 +1,14 @@
-name: UAT backend
+name: DEV backend
 
 on:
   push:
     branches:
-      - feature/uat-release
+      - feature/dev-releasev2.1
     paths:
       - 'mern/backend/**'
 
 env:
-  DOCKER_REPO_DEV: "ratboard-uat-backend"
+  DOCKER_REPO_DEV: "ratboard-dev-backend"
   #DEV_BRANCH_ENV:  ${{ secrets.DEV_BRANCH_ENV }}
   #DOCKERENVPATH: "./branch-service/src/main/resources"
   DOCKERHUB_USER_ID: "bk10d"
