@@ -1,17 +1,17 @@
-name: frontend
+name: UAT branch
 
 on:
   push:
     branches:
-      - multi-pipeline
+      - feature/uat-release
     paths:
-      - "frontend/**"
+      - 'mern/frontend/**'
 
 env:
-  DOCKER_REPO_DEV: "codeql-frontend"
+  DOCKER_REPO_DEV: "ratboard-test-frontend"
+  FRONTEND_ENV:  ${{ secrets.FRONTEND_ENV }}
+  DOCKERENVPATH: "mern/frontend/"
   DOCKERHUB_USER_ID: "bk10d"
-  DOCKER_USERNAME: "bhavanshree"
-  DOCKER_PASSWORD: "Bhavan@113"
 
 jobs:
   pull_and_deploy:
@@ -21,28 +21,34 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Docker Build
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${DOCKER_USERNAME}
-          password: ${DOCKER_PASSWORD}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Copy env variables
+        run: |
+          cd "$DOCKERENVPATH"
+          echo "${FRONTEND_ENV}" > .env
+      
+
       - name: Get the latest tag from Docker Hub
         id: get_latest_tag
         
         run: |
           token=$(curl -s -X POST "https://hub.docker.com/v2/users/login/" \
           -H "Content-Type: application/json" \
-          -d '{"username": "'"${DOCKER_USERNAME}"'", "password": "'"${DOCKER_PASSWORD}"'"}' \
+          -d '{"username": "'"${{ secrets.DOCKER_USERNAME }}"'", "password": "'"${{ secrets.DOCKER_PASSWORD }}"'"}' \
            | jq -r .token)
           # Fetch the latest tag from the private repository using the access token
           latest_tag=$(curl -s "https://hub.docker.com/v2/repositories/$DOCKERHUB_USER_ID/$DOCKER_REPO_DEV/tags/?page_size=1" \
           -H "Authorization: Bearer $token" | jq -r '.results[0].name')
           echo "Latest tag: $latest_tag"
           echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
-
       - name: Increment Docker image tag
         id: increment_tag
         run: |
@@ -58,12 +64,14 @@ jobs:
           fi
           echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
           echo "New Docker tag: $new_tag"
-
       - name: Build Docker image
-        working-directory: frontend
-        run: |
-          docker build -t $DOCKERHUB_USER_ID/$DOCKER_REPO_DEV:${{ env.NEW_TAG }} --no-cache .
+        working-directory: mern/frontend
+        run: docker build -t $DOCKERHUB_USER_ID/$DOCKER_REPO_DEV:${{ env.NEW_TAG }} --no-cache .
 
       - name: Push Docker image to Docker Hub
         run: docker push $DOCKERHUB_USER_ID/$DOCKER_REPO_DEV:${{ env.NEW_TAG }}
-#
+
+      - name: Remove env variables
+        run: |
+          cd "$DOCKERENVPATH"
+          rm -rf .env
