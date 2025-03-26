@@ -3,7 +3,7 @@ name: test branch
 on:
   push:
     branches:
-      - feature/test-release
+      - feature/test-release01
     paths:
       - 'mern/frontend/**'
 
