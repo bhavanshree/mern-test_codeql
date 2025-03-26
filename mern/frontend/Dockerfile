@@ -1,4 +1,4 @@
-# Use the official image as a parent image 
+# Use the official image as a parent image
 FROM node:18.9.1
 
 # Set the working directory
