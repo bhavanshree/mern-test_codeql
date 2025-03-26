@@ -1,14 +1,14 @@
-name: UAT branch
+name: DEV branch
 
 on:
   push:
     branches:
-      - feature/uat-release
+      - feature/dev-releasev2.1
     paths:
       - 'mern/frontend/**'
 
 env:
-  DOCKER_REPO_DEV: "ratboard-uat-frontend"
+  DOCKER_REPO_DEV: "ratboard-dev-frontend"
   FRONTEND_ENV:  ${{ secrets.FRONTEND_ENV }}
   DOCKERENVPATH: "mern/frontend/"
   DOCKERHUB_USER_ID: "bk10d"
