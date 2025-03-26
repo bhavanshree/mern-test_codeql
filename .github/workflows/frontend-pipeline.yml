@@ -8,7 +8,7 @@ on:
       - 'mern/frontend/**'
 
 env:
-  DOCKER_REPO_DEV: "ratboard-test-frontend"
+  DOCKER_REPO_DEV: "ratboard-uat-frontend"
   FRONTEND_ENV:  ${{ secrets.FRONTEND_ENV }}
   DOCKERENVPATH: "mern/frontend/"
   DOCKERHUB_USER_ID: "bk10d"
