@@ -1,17 +1,17 @@
-name: Unified Deployment
+name: test branch
 
 on:
   push:
     branches:
-      - feature/dev-releasev2.1
       - feature/test-release
-      - feature/uat-release
     paths:
       - 'mern/frontend/**'
 
 env:
-  DOCKERHUB_USER_ID: "bk10d"
+  DOCKER_REPO_DEV: "ratboard-test-frontend"
+  FRONTEND_ENV:  ${{ secrets.FRONTEND_ENV }}
   DOCKERENVPATH: "mern/frontend/"
+  DOCKERHUB_USER_ID: "bk10d"
 
 jobs:
   pull_and_deploy:
@@ -24,19 +24,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Determine Environment Variables
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/feature/dev-releasev2.1" ]]; then
-            echo "DOCKER_REPO=ratboard-dev-frontend" >> $GITHUB_ENV
-            echo "FRONTEND_ENV=${{ secrets.DEV_FRONTEND_ENV }}" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/feature/test-release" ]]; then
-            echo "DOCKER_REPO=ratboard-test-frontend" >> $GITHUB_ENV
-            echo "FRONTEND_ENV=${{ secrets.TEST_FRONTEND_ENV }}" >> $GITHUB_ENV
-          elif [[ "${{ github.ref }}" == "refs/heads/feature/uat-release" ]]; then
-            echo "DOCKER_REPO=ratboard-uat-frontend" >> $GITHUB_ENV
-            echo "FRONTEND_ENV=${{ secrets.UAT_FRONTEND_ENV }}" >> $GITHUB_ENV
-          fi
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -47,40 +34,45 @@ jobs:
         run: |
           cd "$DOCKERENVPATH"
           echo "${FRONTEND_ENV}" > .env
+      
 
       - name: Get the latest tag from Docker Hub
         id: get_latest_tag
+        
         run: |
           token=$(curl -s -X POST "https://hub.docker.com/v2/users/login/" \
           -H "Content-Type: application/json" \
           -d '{"username": "'"${{ secrets.DOCKER_USERNAME }}"'", "password": "'"${{ secrets.DOCKER_PASSWORD }}"'"}' \
            | jq -r .token)
-          latest_tag=$(curl -s "https://hub.docker.com/v2/repositories/$DOCKERHUB_USER_ID/$DOCKER_REPO/tags/?page_size=1" \
+          # Fetch the latest tag from the private repository using the access token
+          latest_tag=$(curl -s "https://hub.docker.com/v2/repositories/$DOCKERHUB_USER_ID/$DOCKER_REPO_DEV/tags/?page_size=1" \
           -H "Authorization: Bearer $token" | jq -r '.results[0].name')
+          echo "Latest tag: $latest_tag"
           echo "LATEST_TAG=$latest_tag" >> $GITHUB_ENV
-
       - name: Increment Docker image tag
         id: increment_tag
         run: |
           latest_tag=${{ env.LATEST_TAG }}
-          if [[ -z "$latest_tag" || "$latest_tag" == "null" ]]; then
+          if [[ -z "$latest_tag" ]]; then
+            # If no tag is found, start with the first version
             new_tag="v1"
           else
+            # Split the version number and increment the patch version
             patch="${latest_tag#v}"
             new_patch=$((patch + 1))
             new_tag="v${new_patch}"
           fi
           echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
           echo "New Docker tag: $new_tag"
-
       - name: Build Docker image
         working-directory: mern/frontend
-        run: docker build -t $DOCKERHUB_USER_ID/$DOCKER_REPO:${{ env.NEW_TAG }} --no-cache .
+        run: docker build -t $DOCKERHUB_USER_ID/$DOCKER_REPO_DEV:${{ env.NEW_TAG }} --no-cache .
 
       - name: Push Docker image to Docker Hub
-        run: docker push $DOCKERHUB_USER_ID/$DOCKER_REPO:${{ env.NEW_TAG }}
+        run: docker push $DOCKERHUB_USER_ID/$DOCKER_REPO_DEV:${{ env.NEW_TAG }}
 
       - name: Remove env variables
         run: |
           cd "$DOCKERENVPATH"
           rm -rf .env
+
