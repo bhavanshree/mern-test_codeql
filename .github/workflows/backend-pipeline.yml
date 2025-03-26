@@ -3,15 +3,15 @@ name: DEV-branch-service
 on:
   push:
     branches:
-      - SSE-Fix-Integration
+      - feature/test-release
     paths:
-      - 'branch-service/**'
+      - 'mern/backend/**'
 
 env:
-  DOCKER_REPO_DEV: "rateboard-branch-service"
-  DEV_BRANCH_ENV:  ${{ secrets.DEV_BRANCH_ENV }}
-  DOCKERENVPATH: "./branch-service/src/main/resources"
-  DOCKERHUB_USER_ID: "decoders10"
+  DOCKER_REPO_DEV: "ratboard-test-backend"
+  #DEV_BRANCH_ENV:  ${{ secrets.DEV_BRANCH_ENV }}
+  #DOCKERENVPATH: "./branch-service/src/main/resources"
+  DOCKERHUB_USER_ID: "bk10d"
 
 jobs:
   pull_and_deploy:
@@ -30,10 +30,10 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Copy env variables
-        run: |
-          cd "$DOCKERENVPATH"
-          echo "${DEV_BRANCH_ENV}" > application.properties
+    #   - name: Copy env variables
+    #     run: |
+    #       cd "$DOCKERENVPATH"
+    #       echo "${DEV_BRANCH_ENV}" > application.properties
       
 
       - name: Get the latest tag from Docker Hub
@@ -71,7 +71,7 @@ jobs:
       - name: Push Docker image to Docker Hub
         run: docker push $DOCKERHUB_USER_ID/$DOCKER_REPO_DEV:${{ env.NEW_TAG }}
 
-      - name: Remove env variables
-        run: |
-          cd "$DOCKERENVPATH"
-          rm -rf application.properties
+    #   - name: Remove env variables
+    #     run: |
+    #       cd "$DOCKERENVPATH"
+    #       rm -rf application.properties
