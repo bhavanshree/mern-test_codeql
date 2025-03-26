@@ -3,7 +3,7 @@ name: UAT branch
 on:
   push:
     branches:
-      - feature/uat-release
+      - feature/uat-release01
     paths:
       - 'mern/frontend/**'
 
